@@ -50,7 +50,19 @@ const Header = ({
   const [terms] = useContext(TermsContext);
   const [theme, setTheme] = useContext(ThemeContext);
   const [version, setVersion] = useState('Primary');
-  const versionList = ['Primary', 'Secondary', 'Tertiary'];
+  const possibleVersions = [
+    'Primary',
+    'Secondary',
+    'Tertiary',
+    'Quaternary',
+    'Quinary',
+    'Senary',
+    'Septenary',
+    'Octonary',
+    'Nonary',
+    'Denary'
+  ];
+  const versionList = ['Primary', 'New'];
   const captureRef = useRef<HTMLDivElement>(null);
 
   const handleThemeChange = useCallback(() => {
@@ -150,22 +162,22 @@ const Header = ({
 
       {/* Term selector */}
       <Select
-        onChange={setTerm}
         value={term}
         options={terms.map((currentTerm) => ({
           value: currentTerm,
-          label: getSemesterName(currentTerm)
+          label: getSemesterName(currentTerm),
+          onClick: setTerm
         }))}
         className="semester"
       />
 
       {/* Version selector */}
       <Select
-        onChange={setVersion}
         value={version}
         options={versionList.map((currentVersion) => ({
           value: currentVersion,
-          label: currentVersion
+          label: currentVersion,
+          onClick: setVersion
         }))}
         className="version"
       />
