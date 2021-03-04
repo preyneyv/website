@@ -210,6 +210,14 @@ const Header = ({
                           return item;
                         })
                       );
+                    },
+                    delete: () => {
+                      setVersionIndex(versionIndex - 1);
+                      setVersionList(
+                        versionList.filter((item, i) => {
+                          return i !== index;
+                        })
+                      );
                     }
                   }
                 }
