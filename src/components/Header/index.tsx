@@ -50,7 +50,7 @@ const Header = ({
   const [terms] = useContext(TermsContext);
   const [theme, setTheme] = useContext(ThemeContext);
   const [versionIndex, setVersionIndex] = useState(1);
-  const [versionList] = useState(['Primary', 'New']);
+  const [versionList, setVersionList] = useState(['Primary', 'New']);
   const possibleVersions = [
     'Primary',
     'Secondary',
@@ -202,7 +202,14 @@ const Header = ({
                   icons: ['edit', 'delete'],
                   functions: {
                     edit: (name: string) => {
-                      versionList[index] = name;
+                      setVersionList(
+                        versionList.map((item, i) => {
+                          if (i === index) {
+                            return name;
+                          }
+                          return item;
+                        })
+                      );
                     }
                   }
                 }
