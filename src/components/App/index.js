@@ -9,7 +9,7 @@ import Feedback from '../Feedback';
 import { Oscar } from '../../beans';
 import { useCookie, useJsonCookie, useMobile } from '../../hooks';
 import {
-  TermContext,
+  ScheduleContext,
   TermsContext,
   ThemeContext,
   VersionsContext
@@ -29,6 +29,7 @@ const App = () => {
   // Persist the theme, term, and some term data as cookies
   const [theme, setTheme] = useCookie('theme', 'dark');
   const [term, setTerm] = useCookie('term');
+  const [version_name, setVersionName] = useCookie('version');
   const [termData, patchTermData] = useJsonCookie(term, defaultTermData);
 
   // Only consider courses and CRNs that exist
@@ -49,10 +50,10 @@ const App = () => {
   // Memoize context values so that their references are stable
   const themeContextValue = useMemo(() => [theme, setTheme], [theme, setTheme]);
   const termsContextValue = useMemo(() => [terms, setTerms], [terms, setTerms]);
-  const termContextValue = useMemo(
+  const scheduleContextValue = useMemo(
     () => [
-      { term, oscar, ...filteredTermData },
-      { setTerm, setOscar, patchTermData }
+      { term, version_name, oscar, ...filteredTermData },
+      { setTerm, setVersionName, setOscar, patchTermData }
     ],
     [term, oscar, filteredTermData, setTerm, setOscar, patchTermData]
   );
@@ -169,7 +170,7 @@ const App = () => {
     <ThemeContext.Provider value={themeContextValue}>
       <VersionsContext.Provider value={versionsContextValue}>
         <TermsContext.Provider value={termsContextValue}>
-          <TermContext.Provider value={termContextValue}>
+          <ScheduleContext.Provider value={scheduleContextValue}>
             <div className={classes('App', className)}>
               <Sentry.ErrorBoundary fallback="An error has occurred">
                 {/* On mobile, show the nav drawer + overlay */}
@@ -196,7 +197,7 @@ const App = () => {
               </Sentry.ErrorBoundary>
               <Attribution />
             </div>
-          </TermContext.Provider>
+          </ScheduleContext.Provider>
         </TermsContext.Provider>
       </VersionsContext.Provider>
     </ThemeContext.Provider>
