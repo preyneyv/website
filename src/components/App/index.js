@@ -14,7 +14,7 @@ import {
   ThemeContext,
   VersionsContext
 } from '../../contexts';
-import { defaultScheduleData } from '../../types';
+import { defaultScheduleData, defaultVersionsData } from '../../types';
 
 import 'react-virtualized/styles.css';
 import './stylesheet.scss';
@@ -28,7 +28,9 @@ const App = () => {
   // Persist the theme, term, versions, and some schedule data as cookies
   const [theme, setTheme] = useCookie('theme', 'dark');
   const [term, setTerm] = useCookie('term');
-  const [versions, setVersions] = useCookie('versionList');
+  const [versionList, patchVersionsData] = useJsonCookie('versions', {
+    defaultVersionsData
+  });
   const [versionName, setVersionName] = useCookie('version');
   const [scheduleData, patchScheduleData] = useJsonCookie(
     term ? term.concat(versionName) : ''.concat(versionName),
@@ -69,10 +71,10 @@ const App = () => {
       patchScheduleData
     ]
   );
-  const versionsContextValue = useMemo(() => [versions, setVersions], [
-    versions,
-    setVersions
-  ]);
+  const versionsContextValue = useMemo(
+    () => [{ ...versionList }, { patchVersionsData }],
+    [versionList, patchVersionsData]
+  );
 
   // display popup when first visiting the site
   useEffect(() => {
@@ -155,17 +157,21 @@ const App = () => {
 
   // Initialize the versionName to Primary
   useEffect(() => {
+    const v = Cookies.get('version');
     if (!versionName) {
-      setVersionName('Primary');
+      setVersionName(v || 'Primary');
     }
   }, [versionName, setVersionName]);
 
-  // Initialize the versionList to [Primary, New]
+  // Initialize the versions to what is in cookie
   useEffect(() => {
-    if (!versions) {
-      setVersions(['Primary', 'New']);
+    const vs = Cookies.get('versions');
+    if (!vs) {
+      patchVersionsData({
+        versionList: ['Primary', 'New']
+      });
     }
-  }, [versions, setVersions]);
+  }, [patchVersionsData]);
 
   // Re-render when the page is re-sized to become mobile/desktop
   // (desktop is >= 1024 px wide)
