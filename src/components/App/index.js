@@ -14,7 +14,7 @@ import {
   ThemeContext,
   VersionsContext
 } from '../../contexts';
-import { defaultTermData } from '../../types';
+import { defaultScheduleData } from '../../types';
 
 import 'react-virtualized/styles.css';
 import './stylesheet.scss';
@@ -23,39 +23,42 @@ const NAV_TABS = ['Scheduler', 'Map'];
 
 const App = () => {
   const [terms, setTerms] = useState([]);
-  const [versions, setVersions] = useState([]);
+  const [versions, setVersions] = useState(['Primary', 'New']);
   const [oscar, setOscar] = useState(null);
 
   // Persist the theme, term, and some term data as cookies
   const [theme, setTheme] = useCookie('theme', 'dark');
   const [term, setTerm] = useCookie('term');
-  const [version_name, setVersionName] = useCookie('version');
-  const [termData, patchTermData] = useJsonCookie(term, defaultTermData);
+  const [versionName, setVersionName] = useCookie('version');
+  const [scheduleData, patchScheduleData] = useJsonCookie(
+    term ? term.concat(versionName) : ''.concat(versionName),
+    defaultScheduleData
+  );
 
   // Only consider courses and CRNs that exist
   // (fixes issues where a CRN/course is removed from Oscar
   // after a schedule was made with them)
-  const filteredTermData = useMemo(() => {
+  const filteredScheduleData = useMemo(() => {
     const courseFilter = (courseId) =>
       oscar != null && oscar.findCourse(courseId) != null;
     const crnFilter = (crn) => oscar != null && oscar.findSection(crn) != null;
 
-    const desiredCourses = termData.desiredCourses.filter(courseFilter);
-    const pinnedCrns = termData.pinnedCrns.filter(crnFilter);
-    const excludedCrns = termData.excludedCrns.filter(crnFilter);
+    const desiredCourses = scheduleData.desiredCourses.filter(courseFilter);
+    const pinnedCrns = scheduleData.pinnedCrns.filter(crnFilter);
+    const excludedCrns = scheduleData.excludedCrns.filter(crnFilter);
 
-    return { ...termData, desiredCourses, pinnedCrns, excludedCrns };
-  }, [oscar, termData]);
+    return { ...scheduleData, desiredCourses, pinnedCrns, excludedCrns };
+  }, [oscar, scheduleData]);
 
   // Memoize context values so that their references are stable
   const themeContextValue = useMemo(() => [theme, setTheme], [theme, setTheme]);
   const termsContextValue = useMemo(() => [terms, setTerms], [terms, setTerms]);
   const scheduleContextValue = useMemo(
     () => [
-      { term, version_name, oscar, ...filteredTermData },
-      { setTerm, setVersionName, setOscar, patchTermData }
+      { term, versionName, oscar, ...filteredScheduleData },
+      { setTerm, setVersionName, setOscar, patchScheduleData }
     ],
-    [term, oscar, filteredTermData, setTerm, setOscar, patchTermData]
+    [term, oscar, filteredScheduleData, setTerm, setOscar, patchScheduleData]
   );
   const versionsContextValue = useMemo(() => [versions, setVersions], [
     versions,
@@ -140,6 +143,13 @@ const App = () => {
       setTerm(recentTerm);
     }
   }, [terms, term, setTerm]);
+
+  // Initialize the versionName to Primary
+  useEffect(() => {
+    if (!versionName) {
+      setVersionName('Primary');
+    }
+  }, [versionName, setVersionName]);
 
   // Re-render when the page is re-sized to become mobile/desktop
   // (desktop is >= 1024 px wide)
