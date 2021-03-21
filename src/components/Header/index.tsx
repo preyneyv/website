@@ -21,6 +21,7 @@ import domtoimage from 'dom-to-image';
 import { saveAs } from 'file-saver';
 import ReactTooltip from 'react-tooltip';
 import copy from 'copy-to-clipboard';
+import swal from 'sweetalert';
 import { getSemesterName } from '../../utils';
 import { PNG_SCALE_FACTOR } from '../../constants';
 import ics from '../../libs/ics';
@@ -214,6 +215,12 @@ const Header = ({
                     versionList.length === 2 ? ['edit'] : ['edit', 'delete'],
                   functions: {
                     edit: (name: string) => {
+                      if (versionList.includes(name)) {
+                        swal({
+                          text: 'Same version name already in use!'
+                        });
+                        return false;
+                      }
                       patchVersionsData({
                         versionList: versionList.map((item, i) => {
                           if (i === index) {
@@ -222,6 +229,7 @@ const Header = ({
                           return item;
                         })
                       });
+                      return true;
                     },
                     delete:
                       versionList.length === 2
