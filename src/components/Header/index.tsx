@@ -85,7 +85,7 @@ const Header = ({
     }
     const placeholder = cur === 10 ? 'new version' : possibleVersions[cur];
     vs.splice(vs.length - 1, 0, placeholder);
-    const patch = versionLists;
+    const patch = { ...versionLists };
     patch[term] = vs;
     patchVersionsData(patch);
     setVersionIndex(vs.length - 2);
@@ -233,7 +233,7 @@ const Header = ({
                         });
                         return false;
                       }
-                      const patch = versionLists;
+                      const patch = { ...versionLists };
                       patch[term] = versionList.map((item, i) => {
                         if (i === index) {
                           return name;
@@ -250,7 +250,7 @@ const Header = ({
                             const newList = versionList.filter((item, i) => {
                               return i !== index;
                             });
-                            const patch = versionLists;
+                            const patch = { ...versionLists };
                             patch[term] =
                               versionList[versionList.length - 1] !== 'New'
                                 ? newList.concat(['New'])
