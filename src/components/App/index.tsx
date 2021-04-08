@@ -1,13 +1,33 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import axios from 'axios';
 import swal from '@sweetalert/with-react';
 import * as Sentry from '@sentry/react';
 import Cookies from 'js-cookie';
 import { classes } from '../../utils';
-import { Header, Scheduler, Map, NavDrawer, NavMenu, Attribution } from '..';
+import {
+  Header,
+  Scheduler,
+  Map,
+  NavDrawer,
+  NavMenu,
+  Attribution,
+  HeaderActionBar,
+  Calendar
+} from '..';
 import Feedback from '../Feedback';
 import { Oscar } from '../../beans';
-import { useCookie, useJsonCookie, useMobile } from '../../hooks';
+import {
+  useCookie,
+  useJsonCookie,
+  useMobile,
+  useScreenWidth
+} from '../../hooks';
 import {
   ScheduleContext,
   ScheduleContextValue,
@@ -17,6 +37,7 @@ import {
   ThemeContextValue
 } from '../../contexts';
 import { defaultTermData, Theme } from '../../types';
+import { LARGE_MOBILE_BREAKPOINT } from '../../constants';
 
 import 'react-virtualized/styles.css';
 import './stylesheet.scss';
@@ -163,6 +184,11 @@ const App = () => {
     }
   }, [isDrawerOpen, mobile]);
 
+  const largeMobile = useScreenWidth(LARGE_MOBILE_BREAKPOINT);
+
+  // Create the ref to the DOM element containing the fake calendar
+  const captureRef = useRef(null);
+
   // If the scraped JSON hasn't been loaded,
   // then show an empty div as a loading intermediate
   if (!oscar) {
@@ -178,6 +204,14 @@ const App = () => {
               {/* On mobile, show the nav drawer + overlay */}
               {mobile && (
                 <NavDrawer open={isDrawerOpen} onClose={closeDrawer}>
+                  {/* On small mobile devices, show the header action row */}
+                  {!largeMobile && (
+                    <HeaderActionBar
+                      captureRef={captureRef}
+                      style={{ minHeight: 64 }}
+                    />
+                  )}
+
                   <NavMenu
                     items={NAV_TABS}
                     currentItem={currentTabIndex}
@@ -192,9 +226,18 @@ const App = () => {
                 onChangeTab={setTabIndex}
                 onToggleMenu={openDrawer}
                 tabs={NAV_TABS}
+                captureRef={captureRef}
               />
               {currentTabIndex === 0 && <Scheduler />}
               {currentTabIndex === 1 && <Map />}
+
+              {/* Fake calendar used to capture screenshots */}
+              <div className="capture-container" ref={captureRef}>
+                {/* TODO remove once Calendar gets typing */}
+                {/*
+                    // @ts-ignore */}
+                <Calendar className="fake-calendar" capture />
+              </div>
               <Feedback />
             </Sentry.ErrorBoundary>
             <Attribution />

@@ -1,4 +1,4 @@
-import { DAYS, PALETTE } from './constants';
+import { DAYS, PALETTE, DESKTOP_BREAKPOINT } from './constants';
 
 const stringToTime = (string) => {
   const [, hour, minute, ampm] = /(\d{1,2}):(\d{2}) (a|p)m/.exec(string);
@@ -55,7 +55,7 @@ const hasConflictBetween = (section1, section2) =>
 
 const classes = (...classList) => classList.filter((c) => c).join(' ');
 
-const isMobile = () => window.innerWidth < 1024;
+const isMobile = () => window.innerWidth < DESKTOP_BREAKPOINT;
 
 const simplifyName = (name) => {
   const tokens = name.split(' ');
