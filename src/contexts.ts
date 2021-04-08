@@ -1,6 +1,6 @@
 import React from 'react';
-import { Theme, defaultTermData, TermData } from '../types';
-import Oscar from '../beans/Oscar';
+import { Theme, defaultTermData, TermData } from './types';
+import Oscar from './beans/Oscar';
 
 type Setter<T> = (next: T) => void;
 
