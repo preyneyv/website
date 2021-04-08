@@ -31,7 +31,6 @@ export type ScheduleContextData = {
 } & TermData;
 export type ScheduleContextSetters = {
   setTerm: Setter<string>;
-  setOscar: Setter<Oscar>;
   patchTermData: Setter<Partial<TermData>>;
 };
 export type ScheduleContextValue = [
@@ -50,7 +49,6 @@ export const ScheduleContext = React.createContext<ScheduleContextValue>([
   },
   {
     setTerm: () => {},
-    setOscar: () => {},
     patchTermData: () => {}
   }
 ]);

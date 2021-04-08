@@ -42,7 +42,7 @@ const NAV_TABS = ['Scheduler', 'Map'];
 /**
  * Displays popup when first visiting the site
  */
-function useWelcomeModal() {
+const useWelcomeModal = () => {
   useEffect(() => {
     const cookieKey = 'visited-merge-notice';
     if (!Cookies.get(cookieKey)) {
@@ -81,12 +81,12 @@ function useWelcomeModal() {
       Cookies.set(cookieKey, 'true', { expires: 365 });
     }
   }, []);
-}
+};
 
 /**
  * Handles top-level navigation and app layout with header/content
  */
-function AppContent() {
+const AppContent = () => {
   const mobile = !useScreenWidth(DESKTOP_BREAKPOINT);
   const largeMobile = useScreenWidth(LARGE_MOBILE_BREAKPOINT);
 
@@ -149,7 +149,66 @@ function AppContent() {
       </div>
     </>
   );
-}
+};
+
+/**
+ * Utility hook to bundle together behavior related to
+ * fetching the scraped Oscar data and instantiating a bean
+ */
+const useOscar = (
+  term: string
+): [Oscar | null, (next: Oscar | null) => void] => {
+  const [oscar, setOscar] = useState<Oscar | null>(null);
+
+  // Fetch the current term's scraper information
+  useEffect(() => {
+    setOscar(null);
+    if (term) {
+      axios
+        .get(`https://gt-scheduler.github.io/crawler/${term}.json`)
+        .then((res) => {
+          const newOscar = new Oscar(res.data);
+          setOscar(newOscar);
+        });
+    }
+  }, [term]);
+
+  return [oscar, setOscar];
+};
+
+/**
+ * Utility hook to bundle together behavior related to the current term
+ */
+const useCurrentTerm = (): {
+  term: string;
+  setTerm: (next: string) => void;
+  oscar: Oscar | null;
+} => {
+  const [terms] = useContext(TermsContext);
+
+  // Persist the current term as a cookie
+  const [term, setTermRaw] = useCookie('term', terms[0]);
+
+  // Load the current instance of Oscar
+  const [oscar, setOscar] = useOscar(term);
+
+  // Reset Oscar whenever the term is set,
+  // but only when it actually changes.
+  // This causes the screen to go blank while the scraped data is fetched.
+  const currentTermValue = useRef(term);
+  currentTermValue.current = term;
+  const setTerm = useCallback(
+    (nextTerm: string) => {
+      if (nextTerm !== currentTermValue.current) {
+        setTermRaw(nextTerm);
+        setOscar(null);
+      }
+    },
+    [setTermRaw, setOscar]
+  );
+
+  return { term, setTerm, oscar };
+};
 
 /**
  * ScheduleProvider handles all loading behavior for the scraped data
@@ -157,13 +216,10 @@ function AppContent() {
  *
  * Only renders its inner children if the current schedule has been loaded
  */
-function ScheduleProvider({ children }: { children: React.ReactNode }) {
-  const [terms] = useContext(TermsContext);
+const ScheduleProvider = ({ children }: { children: React.ReactNode }) => {
+  const { term, setTerm, oscar } = useCurrentTerm();
 
-  const [oscar, setOscar] = useState<Oscar | null>(null);
-
-  // Persist the theme, term, and some term data as cookies
-  const [term, setTerm] = useCookie('term', terms[0]);
+  // Persist the term data as a cookie
   const [termData, patchTermData] = useJsonCookie(term, defaultTermData);
 
   // Only consider courses and CRNs that exist
@@ -186,23 +242,10 @@ function ScheduleProvider({ children }: { children: React.ReactNode }) {
   const scheduleContextValue = useMemo<ScheduleContextValue>(
     () => [
       { term, oscar: oscar as Oscar, ...filteredTermData },
-      { setTerm, setOscar, patchTermData }
+      { setTerm, patchTermData }
     ],
-    [term, oscar, filteredTermData, setTerm, setOscar, patchTermData]
+    [term, oscar, filteredTermData, setTerm, patchTermData]
   );
-
-  // Fetch the current term's scraper information
-  useEffect(() => {
-    setOscar(null);
-    if (term) {
-      axios
-        .get(`https://gt-scheduler.github.io/crawler/${term}.json`)
-        .then((res) => {
-          const newOscar = new Oscar(res.data);
-          setOscar(newOscar);
-        });
-    }
-  }, [term]);
 
   // If the scraped JSON hasn't been loaded
   // or if the term hasn't been initialized,
@@ -216,7 +259,7 @@ function ScheduleProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ScheduleContext.Provider>
   );
-}
+};
 
 /**
  * TermsProvider manages loading the list of terms
@@ -225,7 +268,7 @@ function ScheduleProvider({ children }: { children: React.ReactNode }) {
  * If it has not loaded the terms, it will not render any of its children.
  * Once the terms have been loaded, they will be available in the context.
  */
-function TermsProvider({ children }: { children: React.ReactNode }) {
+const TermsProvider = ({ children }: { children: React.ReactNode }) => {
   const [terms, setTerms] = useState<string[] | null>(null);
   useEffect(() => {
     // Fetch all terms via the GitHub API
@@ -260,7 +303,7 @@ function TermsProvider({ children }: { children: React.ReactNode }) {
       {children}
     </TermsContext.Provider>
   );
-}
+};
 
 /**
  * App renders the app using the sequence of:
@@ -276,7 +319,7 @@ function TermsProvider({ children }: { children: React.ReactNode }) {
  * App also bootstraps any static cookie-based features
  * such as the theme or welcome modal.
  */
-function App() {
+const App = () => {
   // The theme value is a static cookie, so it can be loaded here
   const [theme, setTheme] = useCookie('theme', 'dark');
   const themeContextValue = useMemo<ThemeContextValue>(
@@ -303,6 +346,6 @@ function App() {
       </div>
     </ThemeContext.Provider>
   );
-}
+};
 
 export default App;

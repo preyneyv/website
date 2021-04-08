@@ -2,6 +2,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Cookies from 'js-cookie';
 
 /**
+ * Simple utility hook that allows a consumer to manually force a re-render
+ */
+function useForceRender(): () => void {
+  const [, setForceRenderState] = useState(0);
+  const forceRenderNext = useRef(1);
+  const forceRender = useCallback(() => {
+    const next = forceRenderNext.current;
+    setForceRenderState(next);
+    forceRenderNext.current += 1;
+  }, [setForceRenderState, forceRenderNext]);
+
+  return forceRender;
+}
+
+/**
  * Maintains the current parsed value of a local string cookie.
  * Essentially acts as a durable useState
  * that can only handle strings.
@@ -16,50 +31,56 @@ export default function useCookie(
   key: string,
   defaultValue: string | (() => string)
 ): [string, (next: string) => void] {
-  const toLoadRef = useRef<string | null>(null);
-  const [value, setValue] = useState(() => {
-    // Initialize the state
-    const initialValue = Cookies.get(key);
-    if (initialValue === undefined) {
-      // If the cookie is set,
-      // flag the useEffect to load once it runs
+  // Load the latest value from the cookies every time.
+  // Then, in the setter, we force updates manually
+  let value = Cookies.get(key);
 
-      // Support lazy default values
-      let actualDefaultValue;
-      if (typeof defaultValue === 'function') {
-        actualDefaultValue = defaultValue();
-      } else {
-        actualDefaultValue = defaultValue;
-      }
-
-      toLoadRef.current = actualDefaultValue;
-      return actualDefaultValue;
+  // If the value is uninitialized,
+  // then fall back to the default value,
+  // and flag the cookie for a later persistent update inside useEffect
+  const persistentUpdates = useRef<Record<string, string>>({});
+  if (value === undefined) {
+    // Support lazy default values
+    if (typeof defaultValue === 'function') {
+      value = defaultValue();
+    } else {
+      value = defaultValue;
     }
+    persistentUpdates.current[key] = value;
+  }
 
-    return initialValue;
-  });
-
-  // Load the initial default value if the cookie was initially unset.
-  // This only runs once, and exists in order
-  // to avoid side effects in the state initializer.
+  // Consume any later persistent updates.
+  // This is useful to avoid side effects inside of the main hook body.
+  // This is run after every render.
   useEffect(() => {
-    if (toLoadRef.current !== null) {
-      Cookies.set(key, value);
-      toLoadRef.current = null;
+    const entries = Object.entries(persistentUpdates.current);
+    if (entries.length > 0) {
+      entries.forEach(([cookieKey, cookieValue]) => {
+        Cookies.set(cookieKey, cookieValue);
+      });
+      persistentUpdates.current = {};
     }
   }, []);
 
-  // Memoize a setter that also persists the change to the cookie
+  // Memoize a setter that persists the change to the cookie
+  // and forces a re-render manually if the value changed.
+  const forceRender = useForceRender();
+  const lastValue = useRef(value);
+  lastValue.current = value;
   const setCookieValue = useCallback(
     (next: string) => {
-      setValue(next);
-      Cookies.set(key, next);
-      if (toLoadRef.current !== null) {
-        // Don't overwrite this set later
-        toLoadRef.current = null;
+      if (lastValue.current !== next) {
+        Cookies.set(key, next);
+        if (
+          Object.prototype.hasOwnProperty.call(persistentUpdates.current, key)
+        ) {
+          // Don't overwrite this set later
+          delete persistentUpdates.current[key];
+        }
+        forceRender();
       }
     },
-    [key, setValue]
+    [key]
   );
 
   return [value, setCookieValue];
