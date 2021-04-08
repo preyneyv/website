@@ -20,7 +20,7 @@ import { PNG_SCALE_FACTOR } from '../../constants';
 import ics from '../../libs/ics';
 import { Button, Calendar, Select, Tab } from '..';
 import { useMobile } from '../../hooks';
-import { TermContext, TermsContext, ThemeContext } from '../../contexts';
+import { ScheduleContext, TermsContext, ThemeContext } from '../../contexts';
 import { ICS } from '../../types';
 
 export type HeaderProps = {
@@ -40,7 +40,9 @@ const Header = ({
   onToggleMenu,
   tabs
 }: HeaderProps) => {
-  const [{ term, oscar, pinnedCrns }, { setTerm }] = useContext(TermContext);
+  const [{ term, oscar, pinnedCrns }, { setTerm }] = useContext(
+    ScheduleContext
+  );
   const [terms] = useContext(TermsContext);
   const [theme, setTheme] = useContext(ThemeContext);
   const captureRef = useRef<HTMLDivElement>(null);

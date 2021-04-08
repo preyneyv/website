@@ -8,7 +8,7 @@ import { Header, Scheduler, Map, NavDrawer, NavMenu, Attribution } from '..';
 import Feedback from '../Feedback';
 import { Oscar } from '../../beans';
 import { useCookie, useJsonCookie, useMobile } from '../../hooks';
-import { TermContext, TermsContext, ThemeContext } from '../../contexts';
+import { ScheduleContext, TermsContext, ThemeContext } from '../../contexts';
 import { defaultTermData } from '../../types';
 
 import 'react-virtualized/styles.css';
@@ -43,7 +43,7 @@ const App = () => {
   // Memoize context values so that their references are stable
   const themeContextValue = useMemo(() => [theme, setTheme], [theme, setTheme]);
   const termsContextValue = useMemo(() => [terms, setTerms], [terms, setTerms]);
-  const termContextValue = useMemo(
+  const ScheduleContextValue = useMemo(
     () => [
       { term, oscar, ...filteredTermData },
       { setTerm, setOscar, patchTermData }
@@ -158,7 +158,7 @@ const App = () => {
   return (
     <ThemeContext.Provider value={themeContextValue}>
       <TermsContext.Provider value={termsContextValue}>
-        <TermContext.Provider value={termContextValue}>
+        <ScheduleContext.Provider value={ScheduleContextValue}>
           <div className={classes('App', className)}>
             <Sentry.ErrorBoundary fallback="An error has occurred">
               {/* On mobile, show the nav drawer + overlay */}
@@ -185,7 +185,7 @@ const App = () => {
             </Sentry.ErrorBoundary>
             <Attribution />
           </div>
-        </TermContext.Provider>
+        </ScheduleContext.Provider>
       </TermsContext.Provider>
     </ThemeContext.Provider>
   );
