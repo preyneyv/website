@@ -130,7 +130,7 @@ const Header = ({
       {/* Version selector */}
       <Select
         value={versionList[versionIndex]}
-        options={versionList.map((currentVersion, index) => ({
+        options={[...versionList, 'New'].map((currentVersion, index) => ({
           innerValue: currentVersion,
           innerLabel: currentVersion,
           onClick:

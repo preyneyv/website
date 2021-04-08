@@ -201,7 +201,7 @@ const App = () => {
     const vs = Cookies.get('versions');
     if (!vs || vs === '{}') {
       patchVersionsData(
-        terms.reduce((ac, cur) => ({ ...ac, [cur]: ['Primary', 'New'] }), {})
+        terms.reduce((ac, cur) => ({ ...ac, [cur]: ['Primary'] }), {})
       );
     }
   }, [patchVersionsData, terms]);
