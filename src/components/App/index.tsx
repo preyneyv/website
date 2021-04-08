@@ -2,8 +2,8 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useState,
-  useRef
+  useRef,
+  useState
 } from 'react';
 import axios from 'axios';
 import swal from '@sweetalert/with-react';
@@ -17,8 +17,8 @@ import {
   NavDrawer,
   NavMenu,
   Attribution,
-  Calendar,
-  HeaderActionBar
+  HeaderActionBar,
+  Calendar
 } from '..';
 import Feedback from '../Feedback';
 import { Oscar } from '../../beans';
@@ -30,11 +30,15 @@ import {
 } from '../../hooks';
 import {
   ScheduleContext,
+  ScheduleContextValue,
   TermsContext,
+  TermsContextValue,
   ThemeContext,
-  VersionsContext
+  ThemeContextValue,
+  VersionsContext,
+  VersionsContextValue
 } from '../../contexts';
-import { defaultScheduleData } from '../../types';
+import { defaultScheduleData, Theme } from '../../types';
 import { LARGE_MOBILE_BREAKPOINT } from '../../constants';
 
 import 'react-virtualized/styles.css';
@@ -43,8 +47,8 @@ import './stylesheet.scss';
 const NAV_TABS = ['Scheduler', 'Map'];
 
 const App = () => {
-  const [terms, setTerms] = useState([]);
-  const [oscar, setOscar] = useState(null);
+  const [terms, setTerms] = useState<string[]>([]);
+  const [oscar, setOscar] = useState<Oscar | null>(null);
 
   // Persist the theme, term, versions, and some schedule data as cookies
   const [theme, setTheme] = useCookie('theme', 'dark');
@@ -60,9 +64,10 @@ const App = () => {
   // (fixes issues where a CRN/course is removed from Oscar
   // after a schedule was made with them)
   const filteredScheduleData = useMemo(() => {
-    const courseFilter = (courseId) =>
+    const courseFilter = (courseId: string) =>
       oscar != null && oscar.findCourse(courseId) != null;
-    const crnFilter = (crn) => oscar != null && oscar.findSection(crn) != null;
+    const crnFilter = (crn: string) =>
+      oscar != null && oscar.findSection(crn) != null;
 
     const desiredCourses = scheduleData.desiredCourses.filter(courseFilter);
     const pinnedCrns = scheduleData.pinnedCrns.filter(crnFilter);
@@ -72,9 +77,15 @@ const App = () => {
   }, [oscar, scheduleData]);
 
   // Memoize context values so that their references are stable
-  const themeContextValue = useMemo(() => [theme, setTheme], [theme, setTheme]);
-  const termsContextValue = useMemo(() => [terms, setTerms], [terms, setTerms]);
-  const scheduleContextValue = useMemo(
+  const themeContextValue = useMemo<ThemeContextValue>(
+    () => [theme as Theme, setTheme],
+    [theme, setTheme]
+  );
+  const termsContextValue = useMemo<TermsContextValue>(
+    () => [terms as string[], setTerms],
+    [terms, setTerms]
+  );
+  const scheduleContextValue = useMemo<ScheduleContextValue>(
     () => [
       { term, versionName, oscar, ...filteredScheduleData },
       { setTerm, setVersionName, setOscar, patchScheduleData }
@@ -90,7 +101,7 @@ const App = () => {
       patchScheduleData
     ]
   );
-  const versionsContextValue = useMemo(
+  const versionsContextValue = useMemo<VersionsContextValue>(
     () => [{ ...versionLists }, { patchVersionsData }],
     [versionLists, patchVersionsData]
   );
@@ -131,7 +142,7 @@ const App = () => {
         )
       });
 
-      Cookies.set(cookieKey, true, { expires: 365 });
+      Cookies.set(cookieKey, 'true', { expires: 365 });
     }
   }, []);
 
@@ -155,10 +166,10 @@ const App = () => {
         'https://api.github.com/repos/gt-scheduler/crawler/contents?ref=gh-pages'
       )
       .then((res) => {
-        const newTerms = res.data
+        const newTerms = (res.data as { name: string }[])
           .map((content) => content.name)
-          .filter((name) => /\d{6}\.json/.test(name))
-          .map((name) => name.replace(/\.json$/, ''))
+          .filter((name: string) => /\d{6}\.json/.test(name))
+          .map((name: string) => name.replace(/\.json$/, ''))
           .sort()
           .reverse();
         setTerms(newTerms);
@@ -251,7 +262,7 @@ const App = () => {
                   </NavDrawer>
                 )}
                 {/* The header controls top-level navigation
-                    and is always present */}
+              and is always present */}
                 <Header
                   currentTab={currentTabIndex}
                   onChangeTab={setTabIndex}
@@ -269,7 +280,6 @@ const App = () => {
                     // @ts-ignore */}
                   <Calendar className="fake-calendar" capture />
                 </div>
-
                 <Feedback />
               </Sentry.ErrorBoundary>
               <Attribution />

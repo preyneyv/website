@@ -4,18 +4,27 @@ import {
   defaultScheduleData,
   ScheduleData,
   VersionsData
-} from '../types';
-import Oscar from '../beans/Oscar';
+} from './types';
+import Oscar from './beans/Oscar';
 
 type Setter<T> = (next: T) => void;
 
-export type ThemeContextValue = [Theme, Setter<Theme>];
+export type ThemeContextValue = [theme: Theme, setTheme: Setter<Theme>];
+/**
+ * The theme context contains the current value of the app theme (dark or light)
+ */
 export const ThemeContext = React.createContext<ThemeContextValue>([
   'light',
   () => {}
 ]);
 
-export type TermsContextValue = [string[], Setter<string[]>];
+export type TermsContextValue = [
+  allTerms: string[],
+  setAllTerms: Setter<string[]>
+];
+/**
+ * The terms context contains a list of all valid terms
+ */
 export const TermsContext = React.createContext<TermsContextValue>([
   [],
   () => {}
@@ -25,6 +34,9 @@ export type VersionsContextValue = [
   VersionsData,
   { patchVersionsData: Setter<Partial<VersionsData>> }
 ];
+/**
+ * The versions context contains a map of terms -> version names
+ */
 export const VersionsContext = React.createContext<VersionsContextValue>([
   {},
   { patchVersionsData: () => {} }
@@ -45,6 +57,10 @@ export type ScheduleContextValue = [
   ScheduleContextData,
   ScheduleContextSetters
 ];
+/**
+ * The schedule context contains all of the current schedule data
+ * for the current's user's schedule given the current term.
+ */
 export const ScheduleContext = React.createContext<ScheduleContextValue>([
   {
     term: '',
@@ -61,6 +77,10 @@ export const ScheduleContext = React.createContext<ScheduleContextValue>([
 ]);
 
 export type OverlayCrnsContextValue = [string[], Setter<string[]>];
+/**
+ * The overlay CRNs context stores a list of CRNs that are to be shown
+ * as the overlay/transparent state on the calendar.
+ */
 export const OverlayCrnsContext = React.createContext<OverlayCrnsContextValue>([
   [],
   () => {}
