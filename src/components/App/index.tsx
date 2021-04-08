@@ -2,8 +2,9 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useState,
   useRef,
-  useState
+  useContext
 } from 'react';
 import axios from 'axios';
 import swal from '@sweetalert/with-react';
@@ -17,76 +18,31 @@ import {
   NavDrawer,
   NavMenu,
   Attribution,
-  HeaderActionBar,
-  Calendar
+  Calendar,
+  HeaderActionBar
 } from '..';
-import Feedback from '../Feedback';
 import { Oscar } from '../../beans';
-import {
-  useCookie,
-  useJsonCookie,
-  useMobile,
-  useScreenWidth
-} from '../../hooks';
+import { useCookie, useJsonCookie, useScreenWidth } from '../../hooks';
 import {
   ScheduleContext,
-  ScheduleContextValue,
   TermsContext,
-  TermsContextValue,
   ThemeContext,
-  ThemeContextValue
+  ThemeContextValue,
+  TermsContextValue,
+  ScheduleContextValue
 } from '../../contexts';
 import { defaultTermData, Theme } from '../../types';
-import { LARGE_MOBILE_BREAKPOINT } from '../../constants';
+import { DESKTOP_BREAKPOINT, LARGE_MOBILE_BREAKPOINT } from '../../constants';
 
 import 'react-virtualized/styles.css';
 import './stylesheet.scss';
 
 const NAV_TABS = ['Scheduler', 'Map'];
 
-const App = () => {
-  const [terms, setTerms] = useState<string[]>([]);
-  const [oscar, setOscar] = useState<Oscar | null>(null);
-
-  // Persist the theme, term, and some term data as cookies
-  const [theme, setTheme] = useCookie('theme', 'dark');
-  const [term, setTerm] = useCookie('term');
-  const [termData, patchTermData] = useJsonCookie(term, defaultTermData);
-
-  // Only consider courses and CRNs that exist
-  // (fixes issues where a CRN/course is removed from Oscar
-  // after a schedule was made with them)
-  const filteredTermData = useMemo(() => {
-    const courseFilter = (courseId: string) =>
-      oscar != null && oscar.findCourse(courseId) != null;
-    const crnFilter = (crn: string) =>
-      oscar != null && oscar.findSection(crn) != null;
-
-    const desiredCourses = termData.desiredCourses.filter(courseFilter);
-    const pinnedCrns = termData.pinnedCrns.filter(crnFilter);
-    const excludedCrns = termData.excludedCrns.filter(crnFilter);
-
-    return { ...termData, desiredCourses, pinnedCrns, excludedCrns };
-  }, [oscar, termData]);
-
-  // Memoize context values so that their references are stable
-  const themeContextValue = useMemo<ThemeContextValue>(
-    () => [theme as Theme, setTheme],
-    [theme, setTheme]
-  );
-  const termsContextValue = useMemo<TermsContextValue>(
-    () => [terms as string[], setTerms],
-    [terms, setTerms]
-  );
-  const scheduleContextValue = useMemo<ScheduleContextValue>(
-    () => [
-      { term, oscar, ...filteredTermData },
-      { setTerm, setOscar, patchTermData }
-    ],
-    [term, oscar, filteredTermData, setTerm, setOscar, patchTermData]
-  );
-
-  // display popup when first visiting the site
+/**
+ * Displays popup when first visiting the site
+ */
+function useWelcomeModal() {
   useEffect(() => {
     const cookieKey = 'visited-merge-notice';
     if (!Cookies.get(cookieKey)) {
@@ -125,50 +81,14 @@ const App = () => {
       Cookies.set(cookieKey, 'true', { expires: 365 });
     }
   }, []);
+}
 
-  // Fetch the current term's scraper information
-  useEffect(() => {
-    setOscar(null);
-    if (term) {
-      axios
-        .get(`https://gt-scheduler.github.io/crawler/${term}.json`)
-        .then((res) => {
-          const newOscar = new Oscar(res.data);
-          setOscar(newOscar);
-        });
-    }
-  }, [term]);
-
-  // Fetch all terms via the GitHub API
-  useEffect(() => {
-    axios
-      .get(
-        'https://api.github.com/repos/gt-scheduler/crawler/contents?ref=gh-pages'
-      )
-      .then((res) => {
-        const newTerms = (res.data as { name: string }[])
-          .map((content) => content.name)
-          .filter((name: string) => /\d{6}\.json/.test(name))
-          .map((name: string) => name.replace(/\.json$/, ''))
-          .sort()
-          .reverse();
-        setTerms(newTerms);
-      });
-  }, [setTerms]);
-
-  // Set the term to be the first one if it is unset
-  // (once the terms load)
-  useEffect(() => {
-    if (!term) {
-      const [recentTerm] = terms;
-      setTerm(recentTerm);
-    }
-  }, [terms, term, setTerm]);
-
-  // Re-render when the page is re-sized to become mobile/desktop
-  // (desktop is >= 1024 px wide)
-  const mobile = useMobile();
-  const className = classes('App', mobile && 'mobile', theme);
+/**
+ * Handles top-level navigation and app layout with header/content
+ */
+function AppContent() {
+  const mobile = !useScreenWidth(DESKTOP_BREAKPOINT);
+  const largeMobile = useScreenWidth(LARGE_MOBILE_BREAKPOINT);
 
   // Allow top-level tab-based navigation
   const [currentTabIndex, setTabIndex] = useState(0);
@@ -184,68 +104,205 @@ const App = () => {
     }
   }, [isDrawerOpen, mobile]);
 
-  const largeMobile = useScreenWidth(LARGE_MOBILE_BREAKPOINT);
-
   // Create the ref to the DOM element containing the fake calendar
   const captureRef = useRef(null);
 
-  // If the scraped JSON hasn't been loaded,
-  // then show an empty div as a loading intermediate
-  if (!oscar) {
-    return <div className={className} />;
+  return (
+    <>
+      {/* On mobile, show the nav drawer + overlay */}
+      {mobile && (
+        <NavDrawer open={isDrawerOpen} onClose={closeDrawer}>
+          {/* On small mobile devices,
+                  show the header action row */}
+          {!largeMobile && (
+            <HeaderActionBar
+              captureRef={captureRef}
+              style={{ minHeight: 64 }}
+            />
+          )}
+
+          <NavMenu
+            items={NAV_TABS}
+            currentItem={currentTabIndex}
+            onChangeItem={setTabIndex}
+          />
+        </NavDrawer>
+      )}
+      {/* The header controls top-level navigation
+              and is always present */}
+      <Header
+        currentTab={currentTabIndex}
+        onChangeTab={setTabIndex}
+        onToggleMenu={openDrawer}
+        tabs={NAV_TABS}
+        captureRef={captureRef}
+      />
+      {currentTabIndex === 0 && <Scheduler />}
+      {currentTabIndex === 1 && <Map />}
+
+      {/* Fake calendar used to capture screenshots */}
+      <div className="capture-container" ref={captureRef}>
+        {/* TODO remove once Calendar gets typing */}
+        {/*
+          // @ts-ignore */}
+        <Calendar className="fake-calendar" capture />
+      </div>
+    </>
+  );
+}
+
+/**
+ * ScheduleProvider handles all loading behavior for the scraped data
+ * for the current term and its associated durable schedule data.
+ *
+ * Only renders its inner children if the current schedule has been loaded
+ */
+function ScheduleProvider({ children }: { children: React.ReactNode }) {
+  const [terms] = useContext(TermsContext);
+
+  const [oscar, setOscar] = useState<Oscar | null>(null);
+
+  // Persist the theme, term, and some term data as cookies
+  const [term, setTerm] = useCookie('term', terms[0]);
+  const [termData, patchTermData] = useJsonCookie(term, defaultTermData);
+
+  // Only consider courses and CRNs that exist
+  // (fixes issues where a CRN/course is removed from Oscar
+  // after a schedule was made with them)
+  const filteredTermData = useMemo(() => {
+    const courseFilter = (courseId: string) =>
+      oscar != null && oscar.findCourse(courseId) != null;
+    const crnFilter = (crn: string) =>
+      oscar != null && oscar.findSection(crn) != null;
+
+    const desiredCourses = termData.desiredCourses.filter(courseFilter);
+    const pinnedCrns = termData.pinnedCrns.filter(crnFilter);
+    const excludedCrns = termData.excludedCrns.filter(crnFilter);
+
+    return { ...termData, desiredCourses, pinnedCrns, excludedCrns };
+  }, [oscar, termData]);
+
+  // Memoize the context value so that its reference is stable
+  const scheduleContextValue = useMemo<ScheduleContextValue>(
+    () => [
+      { term, oscar: oscar as Oscar, ...filteredTermData },
+      { setTerm, setOscar, patchTermData }
+    ],
+    [term, oscar, filteredTermData, setTerm, setOscar, patchTermData]
+  );
+
+  // Fetch the current term's scraper information
+  useEffect(() => {
+    setOscar(null);
+    if (term) {
+      axios
+        .get(`https://gt-scheduler.github.io/crawler/${term}.json`)
+        .then((res) => {
+          const newOscar = new Oscar(res.data);
+          setOscar(newOscar);
+        });
+    }
+  }, [term]);
+
+  // If the scraped JSON hasn't been loaded
+  // or if the term hasn't been initialized,
+  // then don't render the children
+  if (!oscar || term == null) {
+    return null;
   }
 
   return (
+    <ScheduleContext.Provider value={scheduleContextValue}>
+      {children}
+    </ScheduleContext.Provider>
+  );
+}
+
+/**
+ * TermsProvider manages loading the list of terms
+ * from the GitHub API.
+ *
+ * If it has not loaded the terms, it will not render any of its children.
+ * Once the terms have been loaded, they will be available in the context.
+ */
+function TermsProvider({ children }: { children: React.ReactNode }) {
+  const [terms, setTerms] = useState<string[] | null>(null);
+  useEffect(() => {
+    // Fetch all terms via the GitHub API
+    axios
+      .get(
+        'https://api.github.com/repos/gt-scheduler/crawler/contents?ref=gh-pages'
+      )
+      .then((res) => {
+        const newTerms = (res.data as { name: string }[])
+          .map((content) => content.name)
+          .filter((name: string) => /\d{6}\.json/.test(name))
+          .map((name: string) => name.replace(/\.json$/, ''))
+          .sort()
+          .reverse();
+        setTerms(newTerms);
+      });
+  }, [setTerms]);
+
+  // Invariant: if the terms value is actually null,
+  // we do not use this context value
+  const termsContextValue = useMemo<TermsContextValue>(
+    () => [terms as string[], setTerms],
+    [terms, setTerms]
+  );
+
+  if (terms == null) {
+    return null;
+  }
+
+  return (
+    <TermsContext.Provider value={termsContextValue}>
+      {children}
+    </TermsContext.Provider>
+  );
+}
+
+/**
+ * App renders the app using the sequence of:
+ *  - TermsProvider
+ *  - ScheduleProvider
+ *  - AppContent
+ * to handle the loading cascade.
+ * The above components (except for AppContent)
+ * will not render their children unless they have finished loading
+ * and placed the loaded values in context,
+ * so the app will appear blank as the data loads.
+ *
+ * App also bootstraps any static cookie-based features
+ * such as the theme or welcome modal.
+ */
+function App() {
+  // The theme value is a static cookie, so it can be loaded here
+  const [theme, setTheme] = useCookie('theme', 'dark');
+  const themeContextValue = useMemo<ThemeContextValue>(
+    () => [theme as Theme, setTheme],
+    [theme, setTheme]
+  );
+
+  useWelcomeModal();
+
+  const mobile = !useScreenWidth(DESKTOP_BREAKPOINT);
+  const className = classes('App', mobile && 'mobile', theme);
+
+  return (
     <ThemeContext.Provider value={themeContextValue}>
-      <TermsContext.Provider value={termsContextValue}>
-        <ScheduleContext.Provider value={scheduleContextValue}>
-          <div className={classes('App', className)}>
-            <Sentry.ErrorBoundary fallback="An error has occurred">
-              {/* On mobile, show the nav drawer + overlay */}
-              {mobile && (
-                <NavDrawer open={isDrawerOpen} onClose={closeDrawer}>
-                  {/* On small mobile devices, show the header action row */}
-                  {!largeMobile && (
-                    <HeaderActionBar
-                      captureRef={captureRef}
-                      style={{ minHeight: 64 }}
-                    />
-                  )}
-
-                  <NavMenu
-                    items={NAV_TABS}
-                    currentItem={currentTabIndex}
-                    onChangeItem={setTabIndex}
-                  />
-                </NavDrawer>
-              )}
-              {/* The header controls top-level navigation
-              and is always present */}
-              <Header
-                currentTab={currentTabIndex}
-                onChangeTab={setTabIndex}
-                onToggleMenu={openDrawer}
-                tabs={NAV_TABS}
-                captureRef={captureRef}
-              />
-              {currentTabIndex === 0 && <Scheduler />}
-              {currentTabIndex === 1 && <Map />}
-
-              {/* Fake calendar used to capture screenshots */}
-              <div className="capture-container" ref={captureRef}>
-                {/* TODO remove once Calendar gets typing */}
-                {/*
-                    // @ts-ignore */}
-                <Calendar className="fake-calendar" capture />
-              </div>
-              <Feedback />
-            </Sentry.ErrorBoundary>
-            <Attribution />
-          </div>
-        </ScheduleContext.Provider>
-      </TermsContext.Provider>
+      <div className={classes('App', className)}>
+        <Sentry.ErrorBoundary fallback="An error has occurred">
+          <TermsProvider>
+            <ScheduleProvider>
+              <AppContent />
+            </ScheduleProvider>
+          </TermsProvider>
+        </Sentry.ErrorBoundary>
+        <Attribution />
+      </div>
     </ThemeContext.Provider>
   );
-};
+}
 
 export default App;
