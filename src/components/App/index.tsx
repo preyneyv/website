@@ -47,6 +47,7 @@ import './stylesheet.scss';
 const NAV_TABS = ['Scheduler', 'Map'];
 
 const App = () => {
+  const [termsToCheck] = useState(['202008', '202102', '202105', '202108']);
   const [terms, setTerms] = useState<string[]>([]);
   const [oscar, setOscar] = useState<Oscar | null>(null);
 
@@ -225,6 +226,20 @@ const App = () => {
       }
     }
   }, [patchVersionsData, terms, versionLists]);
+
+  // Backward compatibility for schedule data before version switch implementation
+  // Copy the old cookies to match with the new cookies' naming format.
+  // Checks for term 202008, 202102, 202105, 202108 at the time of implementation.
+  // Does not remove the old cookies.
+  useEffect(() => {
+    for (let x = 0; x < termsToCheck.length; x += 1) {
+      const old_cookie = Cookies.get(termsToCheck[x]);
+      const new_cookie = Cookies.get(termsToCheck[x].concat('Primary'));
+      if (old_cookie && !new_cookie) {
+        Cookies.set(termsToCheck[x].concat('Primary'), old_cookie);
+      }
+    }
+  }, [termsToCheck]);
 
   // Re-render when the page is re-sized to become mobile/desktop
   // (desktop is >= 1024 px wide)
