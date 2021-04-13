@@ -206,6 +206,26 @@ const App = () => {
     }
   }, [patchVersionsData, terms]);
 
+  // Check for new terms
+  // if there are new terms, initialize new version lists
+  useEffect(() => {
+    if (typeof versionLists === 'object' && terms.length !== 0) {
+      const terms_in_cookie = Object.keys(versionLists);
+      if (terms_in_cookie.length !== terms.length) {
+        const missing_terms = terms.filter((x) => !terms_in_cookie.includes(x));
+        patchVersionsData(
+          Object.assign(
+            versionLists,
+            missing_terms.reduce(
+              (ac, cur) => ({ ...ac, [cur]: ['Primary', 'New'] }),
+              {}
+            )
+          )
+        );
+      }
+    }
+  }, [patchVersionsData, terms, versionLists]);
+
   // Re-render when the page is re-sized to become mobile/desktop
   // (desktop is >= 1024 px wide)
   const mobile = useMobile();
