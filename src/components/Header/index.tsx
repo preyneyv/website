@@ -61,23 +61,45 @@ const Header = ({
     'Denary'
   ];
 
+  // This function handles adding new versions to
+  // versionLists state, versions cookie, incrementing
+  // versionIndex state, and setting versionName state,
+  // version cookie.
+  // In other words, it adds versions based on how many version
+  // you currently have, and set the current version to the new version.
+  // There is a limit of 10 versions to be present for each term, the default
+  // version names are [
+  //     'Primary',
+  //     'Secondary',
+  //     'Tertiary',
+  //     'Quaternary',
+  //     'Quinary',
+  //     'Senary',
+  //     'Septenary',
+  //     'Octonary',
+  //     'Nonary',
+  //     'Denary'
+  //   ]
   const addVersion = () => {
     const vs = [...versionList];
     let cur = vs.length - 1;
     while (versionList.includes(possibleVersions[cur]) && cur <= 9) {
       cur += 1;
-    }
-    const placeholder = cur === 10 ? 'new version' : possibleVersions[cur];
-    vs.splice(vs.length - 1, 0, placeholder);
+    } // this while loop finds the index of the next default version name that is not a duplicate
+    // based on how many versions there are currently from a preset list.
+    const nameToAdd = cur === 10 ? 'new version' : possibleVersions[cur];
+    // if index is 10, meaning there are 9 versions and 'Denary' is used,
+    // use 'new version' as the version name to be inserted instead
+    vs.splice(vs.length - 1, 0, nameToAdd); // insert new version
     const patch = { ...versionLists };
     patch[term] = vs;
-    patchVersionsData(patch);
-    setVersionIndex(vs.length - 2);
-    setVersionName(vs[vs.length - 2]);
+    patchVersionsData(patch); // create and send patch that includes the new version list.
+    setVersionIndex(vs.length - 2); // set current index to new version
+    setVersionName(vs[vs.length - 2]); // set current version name to new version
     if (versionIndex === 8) {
       vs.pop();
       patchVersionsData(patch);
-    }
+    } // check if there are ten versions; if yes, remove 'new' as an option in the dropdown
   };
 
   const setVersionIndexBasedOnText = (text: string) => {
