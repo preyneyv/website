@@ -164,6 +164,9 @@ const Header = ({
                         Cookies.set(term.concat(name), data);
                         Cookies.remove(term.concat(versionList[index]));
                       }
+                      if (index === versionIndex) {
+                        setVersionName(name);
+                      }
                       return true;
                     },
                     delete:
