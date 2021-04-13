@@ -34,8 +34,8 @@ export default function CombinationContainer() {
       <Select
         value={sortingOptionIndex}
         options={oscar.sortingOptions.map((sortingOption, i) => ({
-          innerValue: i,
-          innerLabel: sortingOption.label,
+          optionId: i,
+          optionLabel: sortingOption.label,
           // eslint-disable-next-line no-shadow
           onClick: (sortingOptionIndex) =>
             patchScheduleData({ sortingOptionIndex })

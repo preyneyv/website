@@ -93,6 +93,25 @@ const getSemesterName = (term) => {
   return `${semester} ${year}`;
 };
 
+const getSemesterMonth = (term) => {
+  const year = term.split(' ')[1];
+  const month = (() => {
+    switch (term.split(' ')[0]) {
+      case 'Winter':
+        return '12';
+      case 'Spring':
+        return '02';
+      case 'Summer':
+        return '05';
+      case 'Fall':
+        return '08';
+      default:
+        return 'Unknown';
+    }
+  })();
+  return `${year}${month}`;
+};
+
 const humanizeArray = (array, conjunction = 'and') => {
   if (array.length <= 2) {
     return array.join(` ${conjunction} `);
@@ -139,6 +158,7 @@ export {
   isLab,
   isLecture,
   getSemesterName,
+  getSemesterMonth,
   humanizeArray,
   decryptReqs
 };

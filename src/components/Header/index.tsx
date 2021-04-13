@@ -102,9 +102,10 @@ const Header = ({
     } // check if there are ten versions; if yes, remove 'new' as an option in the dropdown
   };
 
-  const setVersionIndexBasedOnText = (text: string) => {
-    setVersionIndex(versionList.indexOf(text));
-    setVersionName(versionList[versionList.indexOf(text)]);
+  const setVersionIndexBasedOnId = (text: string) => {
+    const name = text.split(term)[1];
+    setVersionIndex(versionList.indexOf(name));
+    setVersionName(versionList[versionList.indexOf(name)]);
   };
 
   const totalCredits = useMemo(() => {
@@ -139,8 +140,8 @@ const Header = ({
       <Select
         value={term}
         options={terms.map((currentTerm) => ({
-          innerValue: currentTerm,
-          innerLabel: getSemesterName(currentTerm),
+          optionId: currentTerm,
+          optionLabel: getSemesterName(currentTerm),
           onClick: (t: string) => {
             setVersionIndex(0);
             setVersionName(versionLists[t][0]);
@@ -152,12 +153,12 @@ const Header = ({
 
       {/* Version selector */}
       <Select
-        value={versionList[versionIndex]}
+        value={term.concat(versionList[versionIndex])}
         options={versionList.map((currentVersion, index) => ({
-          innerValue: currentVersion,
-          innerLabel: currentVersion,
+          optionId: term.concat(currentVersion),
+          optionLabel: currentVersion,
           onClick:
-            currentVersion === 'New' ? addVersion : setVersionIndexBasedOnText,
+            currentVersion === 'New' ? addVersion : setVersionIndexBasedOnId,
           iconsAndFunctions:
             currentVersion === 'New'
               ? { icons: ['add'], functions: [null] }

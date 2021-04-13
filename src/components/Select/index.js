@@ -10,15 +10,21 @@ import { classes } from '../../utils';
 import { Button } from '..';
 import './stylesheet.scss';
 
+// General <Select /> component for all select drop down.
+// Each option in <Select /> takes in its identifier(optionId),
+// its text(optionLabel), its onClick, its related icons
+// and their corresponding functions. Each icon's display
+// (before or after the text, when to display),
+// picture have to be specified within this component.
 export default function Select({ className, value, options }) {
   const [opened, setOpened] = useState(false);
-  const [inputIndex, setInputIndex] = useState('');
+  const [inputId, setInputId] = useState('');
   const [inputting, setInputting] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [currentValue, setCurrentValue] = useState(value);
+  const [currentId, setcurrentId] = useState(value);
 
   useEffect(() => {
-    setCurrentValue(value);
+    setcurrentId(value);
   }, [value]);
 
   useEffect(() => {
@@ -27,27 +33,24 @@ export default function Select({ className, value, options }) {
 
   const optionsObtained = options;
   const selectedOption = optionsObtained.find(
-    (option) => option.innerValue === currentValue
+    (option) => option.optionId === currentId
   );
-  const label = selectedOption ? selectedOption.innerLabel : '-';
+  const label = selectedOption ? selectedOption.optionLabel : '-';
   const handleInputChange = (e) => {
     const input = e.target.value.trim();
     setInputValue(`${input}`);
   };
-  const handleKeyDown = (innerValue, iconsAndFunctions, index, e) => {
+  const handleKeyDown = (optionLabel, iconsAndFunctions, index, e) => {
     if (e.key === 'Enter') {
       if (inputValue === '') {
         setInputValue('Blank');
       }
       if (iconsAndFunctions.functions.edit(inputValue)) {
-        setCurrentValue(
-          innerValue === currentValue ? inputValue : currentValue
-        );
-        optionsObtained[index].innerValue = inputValue;
-        optionsObtained[index].innerLabel = inputValue;
+        setcurrentId(optionLabel === currentId ? inputValue : currentId);
+        optionsObtained[index].optionLabel = inputValue;
       }
       setInputting(false);
-      setInputIndex('');
+      setInputId('');
     }
   };
 
@@ -69,64 +72,61 @@ export default function Select({ className, value, options }) {
           {optionsObtained.map(
             (
               {
-                innerValue,
-                innerLabel,
+                optionId,
+                optionLabel,
                 onClick,
                 iconsAndFunctions = { icons: [], functions: {} }
               },
               index
             ) => (
-              <div className="option" key={innerValue + innerLabel}>
-                {inputting && inputIndex === innerValue ? (
+              <div className="option" key={optionId + optionLabel}>
+                {inputting && inputId === optionId ? (
                   <input
                     /* eslint-disable-next-line jsx-a11y/no-autofocus */
                     autoFocus
                     className="option-input"
                     type="text"
-                    key={`input${innerValue}`}
+                    key={`input${optionLabel}`}
                     value={inputValue}
                     onChange={handleInputChange}
-                    placeholder={innerValue}
+                    placeholder={optionLabel}
                     onKeyDown={(e) => {
-                      handleKeyDown(innerValue, iconsAndFunctions, index, e);
+                      handleKeyDown(optionLabel, iconsAndFunctions, index, e);
                     }}
                   />
                 ) : (
                   <Button
                     className="option-text"
-                    key={innerValue}
-                    onClick={() => onClick(innerValue)}
+                    key={optionId}
+                    onClick={() => onClick(optionId)}
                   >
                     {iconsAndFunctions.icons.includes('add') ? (
                       <FontAwesomeIcon fixedWidth icon={faPlus} />
                     ) : null}
-                    {innerLabel}
+                    {optionLabel}
                   </Button>
                 )}
                 {iconsAndFunctions.icons.includes('edit') ? (
                   <Button
-                    key={`${innerValue}edit`}
+                    key={`${optionLabel}edit`}
                     className="option-button"
                     onClick={(e) => {
-                      if (innerValue === inputIndex) {
+                      if (optionId === inputId) {
                         if (inputValue === '') {
                           setInputValue('Blank');
                         }
                         if (iconsAndFunctions.functions.edit(inputValue)) {
-                          setCurrentValue(
-                            innerValue === currentValue
-                              ? inputValue
-                              : currentValue
+                          setcurrentId(
+                            optionLabel === currentId ? inputValue : currentId
                           );
-                          optionsObtained[index].innerValue = inputValue;
-                          optionsObtained[index].innerLabel = inputValue;
+                          optionsObtained[index].optionLabel = inputValue;
                         }
                         setInputting(false);
-                        setInputIndex('');
+                        setInputId('');
                       } else {
-                        setInputValue(innerValue);
+                        setInputValue(optionLabel);
                         setInputting(true);
-                        setInputIndex(innerValue);
+                        setInputId(optionId);
                         e.stopPropagation();
                       }
                     }}
@@ -136,7 +136,7 @@ export default function Select({ className, value, options }) {
                 ) : null}
                 {iconsAndFunctions.icons.includes('delete') ? (
                   <Button
-                    key={`${innerValue}delete`}
+                    key={`${optionLabel}delete`}
                     className="option-button"
                     onClick={() => iconsAndFunctions.functions.delete()}
                   >
