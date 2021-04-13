@@ -195,27 +195,39 @@ const Header = ({
                       versionList.length === 2
                         ? null
                         : () => {
-                            const newList = versionList.filter((item, i) => {
-                              return i !== index;
+                            swal({
+                              buttons: ['Cancel', 'Delete'],
+                              className: `${theme}`,
+                              text: `Are you sure you want to delete "${versionList[index]}"schedule?`
+                            }).then((val) => {
+                              if (val) {
+                                const newList = versionList.filter(
+                                  (item, i) => {
+                                    return i !== index;
+                                  }
+                                );
+                                const patch = { ...versionLists };
+                                patch[term] =
+                                  versionList[versionList.length - 1] !== 'New'
+                                    ? newList.concat(['New'])
+                                    : newList;
+                                const data = Cookies.get(
+                                  term.concat(versionList[index])
+                                );
+                                if (data) {
+                                  Cookies.remove(
+                                    term.concat(versionList[index])
+                                  );
+                                }
+                                patchVersionsData(patch);
+                                const next =
+                                  index <= versionIndex && versionIndex > 1
+                                    ? versionIndex - 1
+                                    : versionIndex;
+                                setVersionIndex(next);
+                                setVersionName(newList[next]);
+                              }
                             });
-                            const patch = { ...versionLists };
-                            patch[term] =
-                              versionList[versionList.length - 1] !== 'New'
-                                ? newList.concat(['New'])
-                                : newList;
-                            const data = Cookies.get(
-                              term.concat(versionList[index])
-                            );
-                            if (data) {
-                              Cookies.remove(term.concat(versionList[index]));
-                            }
-                            patchVersionsData(patch);
-                            const next =
-                              index <= versionIndex && versionIndex > 1
-                                ? versionIndex - 1
-                                : versionIndex;
-                            setVersionIndex(next);
-                            setVersionName(newList[next]);
                           }
                   }
                 }

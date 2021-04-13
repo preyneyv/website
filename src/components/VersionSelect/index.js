@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCaretDown,
@@ -6,16 +6,19 @@ import {
   faPlus,
   faTrashAlt
 } from '@fortawesome/free-solid-svg-icons';
+import swal from '@sweetalert/with-react';
 import { classes } from '../../utils';
 import { Button } from '..';
 import './stylesheet.scss';
+import { ThemeContext } from '../../contexts';
 
-export default function Select({ className, value, options }) {
+export default function VersionSelect({ className, value, options }) {
   const [opened, setOpened] = useState(false);
   const [inputIndex, setInputIndex] = useState('');
   const [inputting, setInputting] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [versionName, setVersionName] = useState('');
   const [currentValue, setCurrentValue] = useState(value);
+  const [theme] = useContext(ThemeContext);
 
   useEffect(() => {
     setCurrentValue(value);
@@ -30,21 +33,21 @@ export default function Select({ className, value, options }) {
     (option) => option.innerValue === currentValue
   );
   const label = selectedOption ? selectedOption.innerLabel : '-';
-  const handleInputChange = (e) => {
+  const handleChangeVersionName = (e) => {
     const input = e.target.value.trim();
-    setInputValue(`${input}`);
+    setVersionName(`${input}`);
   };
   const handleKeyDown = (innerValue, iconsAndFunctions, index, e) => {
     if (e.key === 'Enter') {
-      if (inputValue === '') {
-        setInputValue('Blank');
+      if (versionName === '') {
+        setVersionName('Blank');
       }
-      if (iconsAndFunctions.functions.edit(inputValue)) {
+      if (iconsAndFunctions.functions.edit(versionName)) {
         setCurrentValue(
-          innerValue === currentValue ? inputValue : currentValue
+          innerValue === currentValue ? versionName : currentValue
         );
-        optionsObtained[index].innerValue = inputValue;
-        optionsObtained[index].innerLabel = inputValue;
+        optionsObtained[index].innerValue = versionName;
+        optionsObtained[index].innerLabel = versionName;
       }
       setInputting(false);
       setInputIndex('');
@@ -84,8 +87,8 @@ export default function Select({ className, value, options }) {
                     className="option-input"
                     type="text"
                     key={`input${innerValue}`}
-                    value={inputValue}
-                    onChange={handleInputChange}
+                    value={versionName}
+                    onChange={handleChangeVersionName}
                     placeholder={innerValue}
                     onKeyDown={(e) => {
                       handleKeyDown(innerValue, iconsAndFunctions, index, e);
@@ -109,22 +112,22 @@ export default function Select({ className, value, options }) {
                     className="option-button"
                     onClick={(e) => {
                       if (innerValue === inputIndex) {
-                        if (inputValue === '') {
-                          setInputValue('Blank');
+                        if (versionName === '') {
+                          setVersionName('Blank');
                         }
-                        if (iconsAndFunctions.functions.edit(inputValue)) {
+                        if (iconsAndFunctions.functions.edit(versionName)) {
                           setCurrentValue(
                             innerValue === currentValue
-                              ? inputValue
+                              ? versionName
                               : currentValue
                           );
-                          optionsObtained[index].innerValue = inputValue;
-                          optionsObtained[index].innerLabel = inputValue;
+                          optionsObtained[index].innerValue = versionName;
+                          optionsObtained[index].innerLabel = versionName;
                         }
                         setInputting(false);
                         setInputIndex('');
                       } else {
-                        setInputValue(innerValue);
+                        setVersionName(innerValue);
                         setInputting(true);
                         setInputIndex(innerValue);
                         e.stopPropagation();
@@ -138,7 +141,25 @@ export default function Select({ className, value, options }) {
                   <Button
                     key={`${innerValue}delete`}
                     className="option-button"
-                    onClick={() => iconsAndFunctions.functions.delete()}
+                    onClick={() => {
+                      swal({
+                        buttons: ['Cancel', 'Delete'],
+                        className: `${theme}`,
+                        content: (
+                          <p>
+                            {/* eslint-disable-next-line max-len */}
+                            {/* eslint-disable-next-line react/no-unescaped-entities */}
+                            Are you sure you want to delete "{innerLabel}
+                            {'" '}
+                            schedule?
+                          </p>
+                        )
+                      }).then((val) => {
+                        if (val) {
+                          iconsAndFunctions.functions.delete();
+                        }
+                      });
+                    }}
                   >
                     <FontAwesomeIcon fixedWidth icon={faTrashAlt} />
                   </Button>
