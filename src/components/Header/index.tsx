@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 import swal from 'sweetalert';
+import Cookies from 'js-cookie';
 
 import { getSemesterName } from '../../utils';
 import { LARGE_MOBILE_BREAKPOINT, DESKTOP_BREAKPOINT } from '../../constants';
@@ -158,6 +159,11 @@ const Header = ({
                         return item;
                       });
                       patchVersionsData(patch);
+                      const data = Cookies.get(term.concat(versionList[index]));
+                      if (data) {
+                        Cookies.set(term.concat(name), data);
+                        Cookies.remove(term.concat(versionList[index]));
+                      }
                       return true;
                     },
                     delete:
@@ -172,6 +178,12 @@ const Header = ({
                               versionList[versionList.length - 1] !== 'New'
                                 ? newList.concat(['New'])
                                 : newList;
+                            const data = Cookies.get(
+                              term.concat(versionList[index])
+                            );
+                            if (data) {
+                              Cookies.remove(term.concat(versionList[index]));
+                            }
                             patchVersionsData(patch);
                             const next =
                               index <= versionIndex && versionIndex > 1

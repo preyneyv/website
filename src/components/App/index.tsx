@@ -179,12 +179,12 @@ const App = () => {
   // Set the term to be the first one if it is unset
   // (once the terms load)
   useEffect(() => {
-    const t = Cookies.get('term');
-    if (!term && (!t || t === 'undefined')) {
+    const term_from_cookie = Cookies.get('term');
+    if (!term && (!term_from_cookie || term_from_cookie === 'undefined')) {
       const [recentTerm] = terms;
       setTerm(recentTerm);
-    } else if (t && t !== 'undefined') {
-      setTerm(t);
+    } else if (term_from_cookie && term_from_cookie !== 'undefined') {
+      setTerm(term_from_cookie);
     }
   }, [terms, term, setTerm]);
 
