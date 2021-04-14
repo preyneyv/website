@@ -227,9 +227,11 @@ const App = () => {
     }
   }, [patchVersionsData, terms, versionLists]);
 
-  // Backward compatibility for schedule data before version switch implementation
+  // Backward compatibility for schedule data before version switch
+  // implementation.
   // Copy the old cookies to match with the new cookies' naming format.
-  // Checks for term 202008, 202102, 202105, 202108 at the time of implementation.
+  // Checks for term 202008, 202102, 202105, 202108 at the time of
+  // implementation.
   // Does not remove the old cookies.
   useEffect(() => {
     for (let x = 0; x < termsToCheck.length; x += 1) {
