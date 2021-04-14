@@ -154,6 +154,7 @@ const Header = ({
       {/* Version selector */}
       <Select
         value={term.concat(versionList[versionIndex])}
+        minItemWidth={240}
         options={versionList.map((currentVersion, index) => ({
           optionId: term.concat(currentVersion),
           optionLabel: currentVersion,

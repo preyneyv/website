@@ -31,35 +31,44 @@
 
     .option {
       justify-content: center;
-      align-items: center;
+      align-items: stretch;
       white-space: nowrap;
       padding: 0;
       display: flex;
-      .Button{
+
+      .Button {
         flex-shrink: 0;
-        flex-grow: 1;
+        flex-grow: 0;
       }
+
       .option-text {
-        width: 87px;
+        min-width: 87px;
         white-space: nowrap;
         overflow: hidden;
         display: block;
         text-overflow: ellipsis;
+        flex-shrink: 1;
+        flex-grow: 1;
       }
+
       .option-button {
         padding: 4px;
-        visibility: hidden;
+        display: none;
+        width: 36px;
       }
 
       .option-input{
         padding: 8px;
         margin: 4px;
-        width: 85px;
+        flex-shrink: 1;
+        flex-grow: 1;
+        width: 0;
       }
-    }
-    .option:hover {
-      .option-button {
-        visibility: visible;
+
+      &:hover, &.option-inputting {
+        .option-button {
+          display: flex;
+        }
       }
     }
   }

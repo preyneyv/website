@@ -16,7 +16,12 @@ import './stylesheet.scss';
 // and their corresponding functions. Each icon's display
 // (before or after the text, when to display),
 // picture have to be specified within this component.
-export default function Select({ className, value, options }) {
+export default function Select({
+  className,
+  value,
+  options,
+  minItemWidth = null
+}) {
   const [opened, setOpened] = useState(false);
   const [inputId, setInputId] = useState('');
   const [inputting, setInputting] = useState(false);
@@ -68,7 +73,10 @@ export default function Select({ className, value, options }) {
         />
       )}
       {opened && (
-        <div className="option-container">
+        <div
+          className="option-container"
+          style={minItemWidth != null ? { minWidth: minItemWidth } : {}}
+        >
           {optionsObtained.map(
             (
               {
@@ -79,7 +87,13 @@ export default function Select({ className, value, options }) {
               },
               index
             ) => (
-              <div className="option" key={optionId + optionLabel}>
+              <div
+                className={classes(
+                  'option',
+                  optionId === inputId && 'option-inputting'
+                )}
+                key={optionId + optionLabel}
+              >
                 {inputting && inputId === optionId ? (
                   <input
                     /* eslint-disable-next-line jsx-a11y/no-autofocus */
