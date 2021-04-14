@@ -4,7 +4,8 @@ import {
   faCaretDown,
   faEdit,
   faPlus,
-  faTrashAlt
+  faTrashAlt,
+  faCheck
 } from '@fortawesome/free-solid-svg-icons';
 import { classes } from '../../utils';
 import { Button } from '..';
@@ -20,7 +21,7 @@ export default function Select({
   className,
   value,
   options,
-  minItemWidth = null
+  desiredItemWidth = null
 }) {
   const [opened, setOpened] = useState(false);
   const [inputId, setInputId] = useState('');
@@ -75,7 +76,7 @@ export default function Select({
       {opened && (
         <div
           className="option-container"
-          style={minItemWidth != null ? { minWidth: minItemWidth } : {}}
+          style={desiredItemWidth != null ? { width: desiredItemWidth } : {}}
         >
           {optionsObtained.map(
             (
@@ -145,7 +146,12 @@ export default function Select({
                       }
                     }}
                   >
-                    <FontAwesomeIcon fixedWidth icon={faEdit} />
+                    <FontAwesomeIcon
+                      fixedWidth
+                      icon={
+                        inputting && optionId === inputId ? faCheck : faEdit
+                      }
+                    />
                   </Button>
                 ) : null}
                 {iconsAndFunctions.icons.includes('delete') ? (

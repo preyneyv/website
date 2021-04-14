@@ -154,7 +154,7 @@ const Header = ({
       {/* Version selector */}
       <Select
         value={term.concat(versionList[versionIndex])}
-        minItemWidth={240}
+        desiredItemWidth={240}
         options={versionList.map((currentVersion, index) => ({
           optionId: term.concat(currentVersion),
           optionLabel: currentVersion,
@@ -200,7 +200,7 @@ const Header = ({
                             swal({
                               buttons: ['Cancel', 'Delete'],
                               className: `${theme}`,
-                              text: `Are you sure you want to delete "${versionList[index]}"schedule?`
+                              text: `Are you sure you want to delete "${versionList[index]}" schedule?`
                             }).then((val) => {
                               if (val) {
                                 const newList = versionList.filter(
