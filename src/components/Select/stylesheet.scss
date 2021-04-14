@@ -89,6 +89,12 @@ $max-item-width: 320px;
           display: flex;
         }
       }
+
+      @media (hover: none), (max-width: 900px) {
+        .option-button {
+          display: flex;
+        }
+      }
     }
   }
 }
