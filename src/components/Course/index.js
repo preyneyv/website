@@ -168,7 +168,7 @@ export default function Course({ className, courseId, onAddCourse }) {
                 : 'N/A'}
             </span>
             {totalCredits > 0 && (
-              <span className="credits">{totalCredits} Credits</span>
+              <span className="credits">{totalCredits} Credit{totalCredits > 1 ? "s" : ""}</span>
             )}
           </div>
         )}
